@@ -139,6 +139,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="XML_Elements.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Main_Functionalities.h" />
+    <ClInclude Include="XML_Elements.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
