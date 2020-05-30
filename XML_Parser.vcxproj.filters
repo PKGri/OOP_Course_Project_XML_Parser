@@ -18,15 +18,30 @@
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="XML_Elements.cpp">
+    <ClCompile Include="XML_File.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="XPath_Node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Commands.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="XML_Element.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="XML_Elements.h">
+    <ClInclude Include="Commands.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Main_Functionalities.h">
+    <ClInclude Include="XML_Element.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="XML_File.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="XPath_Node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
