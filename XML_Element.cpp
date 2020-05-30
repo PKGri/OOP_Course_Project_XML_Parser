@@ -3,48 +3,18 @@
 
 #include "XML_Element.h"
 
-//**********************************************************************************************************\\
-|-----------------------------------------> ATTRIBUTE CLASS <------------------------------------------------|
+size_t xmlElement::autoID = 0; // Static variable, generates unique IDs for elements
 
-size_t xmlElement::autoID = 0;
-
-void xmlElement::resetAutoID()
+void xmlElement::resetAutoID() // Static function, resets ID generator
 {
 	autoID = 0;
 }
 
-Attribute::Attribute() : key(), value() {}
-
-Attribute::Attribute(const size_t id) : key("id"), value(std::to_string(id)) {}
-
-
-bool Attribute::operator == (const Attribute& other)
-{
-	return key == other.key;
-}
-
-bool Attribute::operator >= (const Attribute& other)
-{
-	return key == other.key && value == other.value;
-}
-
-bool Attribute::operator == (const std::string& _key)
-{
-	return key == _key;
-}
-
-
-
-
-//**********************************************************************************************************\\
-|-----------------------------------------> XMLELEMENT CLASS <------------------------------------------------|
 
 xmlElement::xmlElement() : ancestors(0), key(), id(++autoID), attributes(), parent(nullptr), content(), children() {}
 
-xmlElement::xmlElement(const size_t id) : ancestors(), key(), id(id), attributes(), parent(nullptr), content(), children() {}
 
-
-const bool xmlElement::contains(const Attribute& attribute) const
+const bool xmlElement::contains(const Attribute& attribute) const // Checks if element contains attribute
 {
 	for (size_t i = 0; i < attributes.size(); i++)
 	{
@@ -53,7 +23,7 @@ const bool xmlElement::contains(const Attribute& attribute) const
 	return false;
 }
 
-const bool xmlElement::contains(const std::string& attributeKey) const
+const bool xmlElement::contains(const std::string& attributeKey) const // Checks if element contains attribute by given key
 {
 	for (size_t i = 0; i < attributes.size(); i++)
 	{
@@ -63,7 +33,7 @@ const bool xmlElement::contains(const std::string& attributeKey) const
 }
 
 
-Attribute* xmlElement::findByKey(const std::string& key)
+Attribute* xmlElement::findByKey(const std::string& key) // Finds attribute by key
 {
 	for (size_t i = 0; i < attributes.size(); i++)
 	{
@@ -73,18 +43,17 @@ Attribute* xmlElement::findByKey(const std::string& key)
 }
 
 
-void xmlElement::createAttributes(const std::string tag) // Parses tag attributes
+void xmlElement::createAttributes(const std::string& tag) // Parses tag attributes
 {
-	std::regex keyRegex("[^ \n\t&<>]+[ \n\t]*=");
-	std::regex valueRegex("\"[^&<>\"]+\"");
+	std::regex keyRegex("[^ \n\t&<>]+[ \n\t]*="); // Regular expression for attribute key
+	std::regex valueRegex("\"[^&<>\"]+\""); // Regular expression for attribute value
 
 	std::sregex_iterator currentKeyMatch(tag.begin(), tag.end(), keyRegex);
 	std::sregex_iterator currentValueMatch(tag.begin(), tag.end(), valueRegex);
 
 	std::sregex_iterator lastMatch;
 
-
-	while (currentKeyMatch != lastMatch && currentValueMatch != lastMatch)
+	while (currentKeyMatch != lastMatch && currentValueMatch != lastMatch) // Separates all attributes and adds them to element attribute vector
 	{
 		Attribute toAdd;
 
@@ -94,12 +63,12 @@ void xmlElement::createAttributes(const std::string tag) // Parses tag attribute
 		std::string key(kmatch.str());
 		std::string value(vmatch.str());
 
-		key.pop_back();
+		key.pop_back(); // Removes '=' from key end
 		std::stringstream ss(key);
-		ss >> key;
+		ss >> key; // Removes whitespace characters from key string
 
-		value.erase(value.begin());
-		value.pop_back();
+		value.erase(value.begin()); // Removes \" from value beginning
+		value.pop_back(); // Removes \" from value end
 
 		toAdd.setKey(key);
 		toAdd.setValue(value);
@@ -112,25 +81,15 @@ void xmlElement::createAttributes(const std::string tag) // Parses tag attribute
 	}
 }
 
-void xmlElement::setAncestors(std::istream& is) 
-{ 
-	is >> ancestors; 
-}
-
 void xmlElement::setKey(std::istream& is)
 {
 	is >> key;
 	if (key.back() == '/') key.pop_back();
 }
 
-void xmlElement::setContent(std::istream& is)
-{
-	is >> content;
-}
-
-void xmlElement::setID(std::string s) 
+void xmlElement::setID(std::string _id) 
 { 
-	id.setValue(s);
+	id.setValue(_id);
 }
 
 void xmlElement::setAncestors(size_t n) 
@@ -143,15 +102,15 @@ void xmlElement::setParent(xmlElement* _parent)
 	parent = _parent;
 }
 
-void xmlElement::setKey(std::string s) 
+void xmlElement::setKey(std::string _key) 
 { 
-	key = s; 
+	key = _key;
 	if (key.back() == '/') key.pop_back();
 }
 
-void xmlElement::setContent(std::string s) 
+void xmlElement::setContent(std::string _content) 
 {
-	content = s;
+	content = _content;
 }
 
 std::vector<Attribute>& xmlElement::useAttributes()
@@ -204,8 +163,7 @@ const std::vector<xmlElement*>& xmlElement::getChildren() const
 	return children;
 }
 
-
-const char* xmlElement::getType() const
+const char* xmlElement::getType() const // Says what type the element is
 {
 	if (!children.empty()) return "parent";
 	if (!content.empty()) return "text";
@@ -213,13 +171,13 @@ const char* xmlElement::getType() const
 }
 
 
-void xmlElement::addAttribute(Attribute attribute)
+void xmlElement::addAttribute(Attribute attribute) // Adds attribute
 {
 	if (!contains(attribute))
 		attributes.push_back(attribute);
 }
 
-void xmlElement::addChild(xmlElement& child)
+void xmlElement::addChild(xmlElement& child) // Adds child
 {
 	child.setParent(this);
 	child.setAncestors(getAncestors() + 1);
@@ -231,37 +189,37 @@ bool isDigits(const std::string& str) // Checks if string is only digits
 	return str.find_first_not_of("0123456789") == std::string::npos;
 }
 
-bool xmlElement::meetsCondition(std::string condition)
+bool xmlElement::fulfilsPredicate(const std::string& predicate) // Checks if element fulfils given predicate
 {
-	if (condition == "")
+	if (predicate == "") // If no predicate
 		return true;
 
-	else if (std::regex_match(condition, std::regex("@id[ \t]*")))
+	else if (std::regex_match(predicate, std::regex("@id[ \t]*"))) // If predicate is [@id]
 		return true;
 
-	else if (condition[0] == '@') 
-		return contains(condition.substr(1));
+	else if (predicate[0] == '@') // [@attributeKey] predicate
+		return contains(predicate.substr(1));
 
-	else if (isDigits(condition))
+	else if (isDigits(predicate)) // [(positive integer)] predicate
 	{
-		if (parent == nullptr)
+		if (parent == nullptr) // If root element
 			return false;
 
-		size_t number = std::stoul(condition, nullptr, 0);
-		if (number > 0 && number <= parent->children.size())
+		size_t number = std::stoul(predicate, nullptr, 0); // Converts predicate string into number
+		if (number > 0 && number <= parent->children.size()) // If element has at least this many children
 		{
-			size_t matches = 0;
-			for (size_t currChild = 0; currChild < parent->children.size(); currChild++)
+			size_t matches = 0; // Number of children with the same name
+			for (size_t currentChild = 0; currentChild < parent->children.size(); currentChild++) // Cycles through all children
 			{
-				if (parent->children[currChild]->getKey() == key) matches++;
-				if (matches == number && parent->children[currChild] == this) return true;
+				if (parent->children[currentChild]->getKey() == key) matches++;
+				if (matches == number && parent->children[currentChild] == this) return true; // Returns on nth child with given name
 			}
 		}
 	}
 
-	else if (condition.find('=') != std::string::npos)
+	else if (predicate.find('=') != std::string::npos) // [textChild=textContent] predicate
 	{
-		std::stringstream ss(condition);
+		std::stringstream ss(predicate);
 
 		std::string childKey;
 		std::string textContent;
@@ -277,18 +235,18 @@ bool xmlElement::meetsCondition(std::string condition)
 			textContent += c;
 		}
 
-		for (size_t currChild = 0; currChild < children.size(); currChild++)
+		for (size_t currentChild = 0; currentChild < children.size(); currentChild++) // Cycles through all children
 		{
-			if (children[currChild]->getKey() == childKey && children[currChild]->getContent() == textContent)
+			if (children[currentChild]->getKey() == childKey && children[currentChild]->getContent() == textContent) // If child has text content as searched for
 				return true;
 		}
 	}
 
-	else if (condition.find(' ') == std::string::npos && condition.find('\t') == std::string::npos)
+	else if (predicate.find(' ') == std::string::npos && predicate.find('\t') == std::string::npos) // [childKey] predicate
 	{
-		for (size_t currChild = 0; currChild < children.size(); currChild++)
+		for (size_t currChild = 0; currChild < children.size(); currChild++) // Cycles through all children
 		{
-			if (children[currChild]->getKey() == condition)
+			if (children[currChild]->getKey() == predicate) // If child key matches searched child key
 				return true;
 		}
 	}

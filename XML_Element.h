@@ -5,37 +5,13 @@
 #include <string>
 #include <vector>
 
-class Attribute
-{
-private:
-	std::string key;
-	std::string value;
-public:
-	Attribute();
-	Attribute(const size_t);
-
-	void setKey(std::istream& is) { is >> key; }
-	void setValue(std::istream& is) { is >> value; }
-
-	void setKey(std::string s) { key = s; }
-	void setValue(std::string s) { value = s; }
-
-	std::string& useValue() { return value; }
-
-	const std::string getKey() const { return key; }
-	const std::string getValue() const { return value; }
-
-	bool operator == (const Attribute&);
-	bool operator >= (const Attribute&);
-
-	bool operator == (const std::string&);
-};
-
+#include "Attribute.h"
 
 class xmlElement
 {
 protected:
 	static size_t autoID;
+
 	size_t ancestors;
 	std::string key;
 	Attribute id;
@@ -50,17 +26,14 @@ protected:
 
 public:
 	xmlElement();
-	xmlElement(const size_t);
 
 	static void resetAutoID();
 
 	Attribute* findByKey(const std::string&);
 
-	void createAttributes(const std::string);
+	void createAttributes(const std::string&);
 
-	void setAncestors(std::istream& is);
 	void setKey(std::istream& is);
-	void setContent(std::istream& is);
 
 	void setID(std::string s);
 	void setAncestors(size_t n);
@@ -85,17 +58,17 @@ public:
 	void addAttribute(Attribute);
 	void addChild(xmlElement&);
 
-	bool meetsCondition(std::string);
+	bool fulfilsPredicate(const std::string&);
 };
 
 
-inline std::ostream& operator << (std::ostream& os, Attribute attribute)
+inline std::ostream& operator << (std::ostream& os, const Attribute& attribute)
 {
 	os << ' ' << attribute.getKey() << "=\"" << attribute.getValue() << '"';
 	return os;
 }
 
-inline std::ostream& operator << (std::ostream& os, std::vector<Attribute> attributes)
+inline std::ostream& operator << (std::ostream& os, const std::vector<Attribute>& attributes)
 {
 	for (size_t i = 0; i < attributes.size(); i++)
 	{
@@ -105,9 +78,9 @@ inline std::ostream& operator << (std::ostream& os, std::vector<Attribute> attri
 	return os;
 }
 
-inline std::ostream& operator << (std::ostream& os, std::vector<xmlElement*> children);
+inline std::ostream& operator << (std::ostream& os, const std::vector<xmlElement*>& children);
 
-inline void nesting(std::ostream& os, xmlElement element)
+inline void nesting(std::ostream& os, const xmlElement& element)
 {
 	for (size_t i = 0; i < element.getAncestors(); i++)
 	{
@@ -115,7 +88,7 @@ inline void nesting(std::ostream& os, xmlElement element)
 	}
 }
 
-inline std::ostream& operator << (std::ostream& os, xmlElement element)
+inline std::ostream& operator << (std::ostream& os, const xmlElement& element)
 {
 	if (element.getType() == "empty")
 	{
@@ -140,7 +113,7 @@ inline std::ostream& operator << (std::ostream& os, xmlElement element)
 	return os;
 }
 
-inline std::ostream& operator << (std::ostream& os, std::vector<xmlElement*> children)
+inline std::ostream& operator << (std::ostream& os, const std::vector<xmlElement*>& children)
 {
 	for (size_t i = 0; i < children.size(); i++)
 	{

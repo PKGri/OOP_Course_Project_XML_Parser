@@ -3,6 +3,7 @@
 
 #include <list>
 
+#include "XPath_Node.h"
 #include "XML_Element.h"
 
 bool isXmlFile(const std::string&);
@@ -11,6 +12,7 @@ bool isEmptyTag(std::string&);
 bool isClosingTag(std::string&);
 void parseClosingTag(std::string&);
 std::string parseTextTagContent(std::ifstream&);
+std::vector<XPathNode> parseXPath(const std::string&);
 
 class xmlFile
 {
@@ -19,7 +21,7 @@ private:
 	std::string xmlVersion;
 	xmlElement* root;
 	std::list<xmlElement> Elements;
-	std::vector<size_t> openedTags;
+	std::vector<size_t> openedTags; // Used as a stack
 
 	xmlElement& listNth(const size_t n);
 
@@ -31,9 +33,9 @@ private:
 	void insertElement(const std::list<xmlElement>::iterator, const std::string);
 
 public:
-	xmlFile() : path(), xmlVersion("<?xml version=\"1.0\"?>"), root(nullptr), Elements(), openedTags() {}
+	xmlFile();
 
-	const std::string getPath();
+	const std::string& getPath();
 	//const std::string getxmlVersion() { return xmlVersion; }
 	//const xmlElement* getRoot() { return root; }
 	//const std::list<xmlElement>& getElements() { return Elements; }
@@ -51,7 +53,6 @@ public:
 	void saveas();
 	void clear();
 
-
 	void print();
 	void select(std::string&, std::string&);
 	void set(std::string&, std::string&, std::string&);
@@ -62,10 +63,7 @@ public:
 	void deleteattribute(std::string&, std::string&);
 	void newattribute(std::string&, std::string&, std::string&);
 	void newchild(std::string&);
-	void xpath(/*std::string&, */std::string&);
-
-
+	void xpath(std::string&);
 };
-
 
 #endif XML_FILE_H

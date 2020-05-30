@@ -1,43 +1,14 @@
-#include "XPath_Node.h"
-
 #include <vector>
 #include <regex>
 #include <sstream>
 
-/*
-std::vector<XPath> parseXPath(std::string& xpath)
+#include "XPath_Node.h"
+
+
+void XPathNode::parseNode(std::string& node) // Separates element from predicate
 {
-	std::regex element("/[^ \t\n&<>/\\[\\]]+[ \t]*");
-
-	std::sregex_iterator currentNodeMatch(xpath.begin(), xpath.end(), element);
-
-	std::sregex_iterator lastMatch;
-
-	std::vector<XPath> XPath;
-
-	while (currentNodeMatch != lastMatch)
-	{
-		std::smatch match = *currentNodeMatch;
-
-		std::string node(match.str().substr(1));
-
-		std::stringstream ss(node);
-		ss >> node;
-
-		if (node != "")
-			//XPath.push_back(node);
-
-		currentNodeMatch++;
-	}
-
-	return XPath;
-}
-*/
-
-void XPathNode::parseNode(std::string& node)
-{
-	std::regex elementReg("[^\n\\[\\]]+[\\[]?");
-	std::regex conditionReg("\\[[^&<>\\[\\]]+\\]");
+	std::regex elementReg("[^\n\\[\\]]+[\\[]?"); // Regular expression for element
+	std::regex predicateReg("\\[[^&<>\\[\\]]+\\]"); // Regular expression for predicate
 
 	std::sregex_iterator lastMatch;
 
@@ -45,26 +16,27 @@ void XPathNode::parseNode(std::string& node)
 
 	std::smatch elementM = *elementMatch;
 	std::string _element(elementM.str());
-	std::stringstream s(_element);
-	s >> _element;
+	std::stringstream ss(_element);
+	ss >> _element; // Removes whitespace characters from element string
 
-	if (_element.back() == '[') _element.pop_back();
+	if (_element.back() == '[') _element.pop_back(); // Removes '[' from element string
 
 	element = _element;
 
-	std::sregex_iterator conditionMatch(node.begin(), node.end(), conditionReg);
+	std::sregex_iterator predicateMatch(node.begin(), node.end(), predicateReg);
 
-	while (conditionMatch != lastMatch)
+	while (predicateMatch != lastMatch)
 	{
-		std::smatch conditionM = *conditionMatch;
-		std::string _condition(conditionM.str());
-		if (!_condition.empty())
+		std::smatch predicateM = *predicateMatch;
+		std::string _predicate(predicateM.str());
+		if (!_predicate.empty())
 		{
-			_condition.erase(0, 1);
-			_condition.pop_back();
+			_predicate.erase(0, 1);
+			_predicate.pop_back();
 		}
-		condition = _condition;
-		conditionMatch++;
+		predicate = _predicate;
+		predicateMatch++;
+		break;
 	}
 }
 
@@ -73,9 +45,9 @@ const std::string& XPathNode::getElement() const
 	return element;
 }
 
-const std::string& XPathNode::getCondition() const
+const std::string& XPathNode::getPredicate() const
 {
-	return condition;
+	return predicate;
 }
 
 void XPathNode::setElement(std::string& _element)
@@ -83,7 +55,7 @@ void XPathNode::setElement(std::string& _element)
 	element = _element;
 }
 
-void XPathNode::setCondition(std::string& _condition)
+void XPathNode::setCondition(std::string& _predicate)
 {
-	condition = _condition;
+	predicate = _predicate;
 }

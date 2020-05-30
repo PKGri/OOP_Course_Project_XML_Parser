@@ -1,5 +1,5 @@
-#ifndef XPATH_H
-#define XPATH_H
+#ifndef XPATH_NODE_H
+#define XPATH_NODE_H
 
 #include <string>
 
@@ -7,25 +7,24 @@ class XPathNode
 {
 private:
 	std::string element;
-	std::string condition;
+	std::string predicate;
 public:
-	XPathNode(): element(), condition() {}
+	XPathNode(): element(), predicate() {}
 
 	const std::string& getElement() const;
-	const std::string& getCondition() const;
+	const std::string& getPredicate() const;
 
 	void setElement(std::string&);
 	void setCondition(std::string&);
 
 	void parseNode(std::string&);
-
 };
 
 inline std::ostream& operator << (std::ostream& os, XPathNode node)
 {
-	os << node.getElement() << node.getCondition();
+	os << node.getElement() << node.getPredicate();
 	
 	return os;
 }
 
-#endif XPATH_H
+#endif XPATH_NODE_H

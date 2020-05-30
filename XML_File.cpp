@@ -16,20 +16,20 @@ bool isXmlFile(const std::string& filename) // Checks file extension
 	else return false;
 }
 
-std::string parseTag(std::ifstream& xml_file) 
+std::string parseTag(std::ifstream& xml_file) // Reads tag
 {
 	std::streampos begin(xml_file.tellg());
 
 	char c;
 	xml_file >> c;
-	if (c != '<') // IF TEXT CONTENT
+	if (c != '<') // If text content
 	{
 		xml_file.seekg(begin);
 		return "Not tag";
 	}
 
 	std::string tag;
-	while (xml_file.get(c) && c != '>')
+	while (xml_file.get(c) && c != '>') // Gets all characters until tag is closed
 	{
 		tag += c;
 	}
@@ -45,17 +45,17 @@ bool isEmptyTag(std::string& tag) // Checks if tag format is <tag/>
 
 bool isClosingTag(std::string& tag) // Checks if tag format is </tag>
 {
-	std::regex closingTag("/[^ \n\t]+[ \n\t]*");
+	std::regex closingTag("/[^ \n\t]+[ \n\t]*"); // Regular expression for closing tag
 
 	return regex_match(tag, closingTag);
 }
 
-void parseClosingTag(std::string& tag) // Removes '\' from closing tag
+void parseClosingTag(std::string& tag) // Removes '/' from closing tag and all whitespace characters after key
 {
 	std::stringstream ss(tag);
 	char c;
-	ss.get(c);
-	ss >> tag;
+	ss.get(c); // Removes '/'
+	ss >> tag; //Removes whitespace characters after key
 }
 
 std::string parseTextTagContent(std::ifstream& xml_file) // Reads text content of opened text tag
@@ -71,29 +71,29 @@ std::string parseTextTagContent(std::ifstream& xml_file) // Reads text content o
 		xml_file.get(c);
 	}
 	
-	xml_file.unget();
+	xml_file.unget(); // Ungets '<' so it can be read again to open a tag
 
 	return text;
 }
 
-std::vector<XPathNode> parseXPath(std::string xpath)
+std::vector<XPathNode> parseXPath(const std::string& xpath) // Creates vector of nodes for easier traversal one by one later
 {
-	std::regex node("/[^ \t&<>/\\[\\]]+[^&<>/]*");
+	std::regex node("/[^ \t&<>/\\[\\]]+[^&<>/]*"); // Regular expression for node and predicate
 
 	std::sregex_iterator currentNodeMatch(xpath.begin(), xpath.end(), node);
 	std::sregex_iterator lastMatch;
 
 	std::vector<XPathNode> nodes;
 
-	while (currentNodeMatch != lastMatch)
+	while (currentNodeMatch != lastMatch) // Finds all nodes and corresponding predicates in xpath expression
 	{
 		std::smatch nodeMatch = *currentNodeMatch;
 
-		std::string node(nodeMatch.str().substr(1));
+		std::string node(nodeMatch.str().substr(1)); // Removes '/' from front
 
 		XPathNode toAdd;
 
-		toAdd.parseNode(node);
+		toAdd.parseNode(node); // Separates element from predicate
 
 		nodes.push_back(toAdd);
 
@@ -107,6 +107,8 @@ std::vector<XPathNode> parseXPath(std::string xpath)
 //**********************************************************************************************************\\
 |-------------------------------------------> XMLFILE CLASS <------------------------------------------------|
 
+xmlFile::xmlFile() : path(), xmlVersion("<?xml version=\"1.0\"?>"), root(nullptr), Elements(), openedTags() {}
+
 xmlElement& xmlFile::listNth(const size_t n) // Returns Nth element in Elements
 {
 	std::list<xmlElement>::iterator element = Elements.begin();
@@ -114,34 +116,34 @@ xmlElement& xmlFile::listNth(const size_t n) // Returns Nth element in Elements
 	return *element;
 }
 
-void xmlFile::uniquifyID() // Name says it all, makes all IDs in file unique
+void xmlFile::uniquifyID() // Name says it all, makes all XML element IDs in file unique
 {
-	for (std::list<xmlElement>::iterator standard = Elements.begin(); standard != Elements.end(); ++standard)
+	for (std::list<xmlElement>::iterator currentElement = Elements.begin(); currentElement != Elements.end(); ++currentElement) // Cycles through all elements
 	{
-		std::string* currentID = &standard->useID().useValue();
+		std::string* currentID = &currentElement->useID().useValue(); // Current element ID value
 
-		std::vector<std::string*> matches;
-		matches.push_back(currentID);
+		std::vector<std::string*> matches; // Vector containing all IDs with the same value as current
+		matches.push_back(currentID); // First ID is current
 
-		for (std::list<xmlElement>::iterator sample = Elements.begin(); sample != Elements.end(); ++sample)
+		for (std::list<xmlElement>::iterator comparison = Elements.begin(); comparison != Elements.end(); ++comparison) // Cycles through all elements to compare them with current
 		{
-			if (*currentID == sample->useID().useValue() && currentID != &sample->useID().useValue())
+			if (*currentID == comparison->useID().useValue() && currentID != &comparison->useID().useValue()) // Populates vector of matches with all matches as the cycle runs
 			{
-				matches.push_back(&sample->useID().useValue());
+				matches.push_back(&comparison->useID().useValue());
 			}
 		}
 
-		if (matches.size() > 1)
+		if (matches.size() > 1) // If there are any matches with current
 		{
-			for (size_t i = 0; i < matches.size(); i++)
+			for (size_t currentMatch = 0; currentMatch < matches.size(); currentMatch++) // Concatenates all with a different number
 			{
-				*matches[i] += ("_" + std::to_string(i + 1));
+				*matches[currentMatch] += ("_" + std::to_string(currentMatch + 1));
 			}
 		}
 	}
 }
 
-xmlElement* xmlFile::findByID(const std::string& id)
+xmlElement* xmlFile::findByID(const std::string& id) // Finds element by id
 {
 	for (std::list<xmlElement>::iterator element = Elements.begin(); element != Elements.end(); ++element)
 	{
@@ -150,7 +152,7 @@ xmlElement* xmlFile::findByID(const std::string& id)
 	return nullptr;
 }
 
-std::list<xmlElement>::iterator xmlFile::findPositionByID(const std::string& id)
+std::list<xmlElement>::iterator xmlFile::findPositionByID(const std::string& id) // Finds element position in Elements by id
 {
 	for (std::list<xmlElement>::iterator element = Elements.begin(); element != Elements.end(); ++element)
 	{
@@ -181,21 +183,20 @@ void xmlFile::insertElement(const std::list<xmlElement>::iterator position, cons
 	Elements.insert(position, toAdd);
 }
 
-const std::string  xmlFile::getPath()
+const std::string& xmlFile::getPath() // Returns file path
 {
 	return path;
 }
 
 void xmlFile::open() // Loads data from file
 {
-	std::cin >> path;
+	std::cin >> path; // File path
 
 	if (isXmlFile(path))
 	{
 		std::ifstream xml_file(path.data());
 
-		// CREATE NEW FILE IF NONEXISTENT
-		if (!xml_file)
+		if (!xml_file) // Creates new file with given path if nonexistent
 		{
 			std::ofstream new_file(path.data());
 			new_file.close();
@@ -210,7 +211,7 @@ void xmlFile::open() // Loads data from file
 
 		std::cout << "Opening...\n";
 
-		// READS XML VERSION IF GIVEN
+		// Reads XML version if given in file beginning
 		getline(xml_file, xmlVersion);
 		if (xmlVersion.substr(0, 5) != "<?xml")
 		{
@@ -220,42 +221,39 @@ void xmlFile::open() // Loads data from file
 
 		// READS DATA \\
 
-		std::string currentInput(parseTag(xml_file));
+		std::string currentInput(parseTag(xml_file)); // Checks if file starts with opening tag
 		if (currentInput == "Not tag")
 		{
 			std::cout << "Invalid content\n";
 			return;
 		}
 
-		createElement(currentInput);
+		createElement(currentInput); // Creates root element
 		root = &Elements.back();
 
 		if (root == nullptr) return;
 
-		// IF ROOT IS EMPTY TAG
-		if (isEmptyTag(currentInput)) return;
+		if (isEmptyTag(currentInput)) return; // If root is empty tag
 
-		openedTags.push_back(Elements.size() - 1);
+		openedTags.push_back(Elements.size() - 1); // Saves last opened tag at end of vector
 
-		while (!xml_file.eof() && !openedTags.empty())
+		while (!xml_file.eof() && !openedTags.empty()) // Reads until end of file or until root tag is closed
 		{
-			currentInput = parseTag(xml_file);
+			currentInput = parseTag(xml_file); // Reads tag
 
-			// READS TEXT CONTENT OF TEXT TAG
-			if (currentInput == "Not tag")
+			if (currentInput == "Not tag") // Reads text content if text tag is opened
 			{
 				char c;
-				if (!xml_file.get(c)) return; // IF ROOT HAS NO CLOSING TAG
-
+				if (!xml_file.get(c)) return; // In case root has no closing tag
 				xml_file.unget();
-				listNth(openedTags.back()).setContent(parseTextTagContent(xml_file));
+
+				listNth(openedTags.back()).setContent(parseTextTagContent(xml_file)); // Sets text content of last opened tag
 			}
-			// READS CLOSING TAG
-			else if (isClosingTag(currentInput))
+			else if (isClosingTag(currentInput)) // Reads closing tag
 			{
 				parseClosingTag(currentInput);
 
-				if (currentInput == listNth(openedTags.back()).getKey())
+				if (currentInput == listNth(openedTags.back()).getKey()) // Closes last opened tag
 					openedTags.pop_back();
 				else
 				{
@@ -263,14 +261,12 @@ void xmlFile::open() // Loads data from file
 					abort();
 				}
 			}
-			// READS EMPTY TAG SYNTAX
-			else if (isEmptyTag(currentInput))
+			else if (isEmptyTag(currentInput)) // Reads empty tag formatted as <tag/>
 			{
 				createElement(currentInput);
 				listNth(openedTags.back()).addChild(Elements.back());
 			}
-			// READS CHILD TAG
-			else
+			else // Reads child tag of last opened tag
 			{
 				createElement(currentInput);
 				listNth(openedTags.back()).addChild(Elements.back());
@@ -282,19 +278,19 @@ void xmlFile::open() // Loads data from file
 
 		xml_file.close();
 
-		uniquifyID();
+		uniquifyID(); // Makes all IDs unique
 	}
 	else std::cout << "Invalid file\n";
 }
 
-void xmlFile::save() // Writes data to original file
+void xmlFile::save() // Writes data to original file path
 {
 	std::ofstream outputFile(path.data());
 	outputFile << xmlVersion << '\n' << *root;
 	outputFile.close();
 }
 
-void xmlFile::saveas() // Writes data to file
+void xmlFile::saveas() // Writes data to newly specified file path
 {
 	std::cin >> path;
 	save();
@@ -323,21 +319,21 @@ void xmlFile::print() // Prints currently loaded XML data
 
 void xmlFile::select(std::string& id, std::string& key) // Prints attribute value by given element id and attribute key
 {
-	xmlElement* element = findByID(id);
-	if (element == nullptr)
+	xmlElement* element = findByID(id); // Finds element by id
+
+	if (element == nullptr) // If no such element exists
 	{
 		std::cout << "ID not found\n";
 		return;
 	}
-	
-	if (key == "id")
+	if (key == "id") // If chosen attribute is id
 	{
 		std::cout << id << '\n';
 		return;
 	}
 	
-	Attribute* attribute = element->findByKey(key);
-	if (attribute == nullptr)
+	Attribute* attribute = element->findByKey(key); // Finds attribute by key
+	if (attribute == nullptr)// If no such attribute exists
 	{
 		std::cout << "Attribute key not found\n";
 		return;
@@ -348,14 +344,14 @@ void xmlFile::select(std::string& id, std::string& key) // Prints attribute valu
 
 void xmlFile::set(std::string& id, std::string& key, std::string& value) // Sets attribute value by given element id and attribute key
 {
-	xmlElement* element = findByID(id);
-	if (element == nullptr)
+	xmlElement* element = findByID(id); // Finds element by id
+
+	if (element == nullptr) // If no such element exists
 	{
 		std::cout << "ID not found\n";
 		return;
 	}
-
-	if (key == "id")
+	if (key == "id") // If chosen attribute is id
 	{
 		element->useID().setValue(value);
 		uniquifyID();
@@ -363,7 +359,7 @@ void xmlFile::set(std::string& id, std::string& key, std::string& value) // Sets
 	}
 
 	Attribute* attribute = element->findByKey(key);
-	if (attribute == nullptr)
+	if (attribute == nullptr) // If no such attribute exists
 	{
 		std::cout << "Attribute key not found\n";
 		return;
@@ -373,34 +369,43 @@ void xmlFile::set(std::string& id, std::string& key, std::string& value) // Sets
 	std::cout << "Successfully changed attribute value\n";
 }
 
-void xmlFile::settext(std::string& id, std::string& text)
+void xmlFile::settext(std::string& id, std::string& text) // Sets element text content
 {
-	xmlElement* element = findByID(id);
-	if (element == nullptr)
+	xmlElement* element = findByID(id); // Finds element by id
+
+	if (element == nullptr) // If no such element exists
 	{
 		std::cout << "ID not found\n";
 		return;
 	}
-
-	element->setContent(text);
-	std::cout << "Successfully changed text content\n";
+	
+	if (element->getType() == "text" || element->getType() == "empty") // If element is not parent tag
+	{
+		element->setContent(text);
+		std::cout << "Successfully changed text content\n";
+	}
+	else
+	{
+		std::cout << "Element is parent tag and cannot have text content\n";
+	}
 }
 
 void xmlFile::children(std::string& id) // Prints all attributes belonging to children of element identified by id
 {
-	xmlElement* element = findByID(id);
-	if (element == nullptr)
+	xmlElement* element = findByID(id); // Finds element by id
+
+	if (element == nullptr) // If no such element exists
 	{
 		std::cout << "ID not found\n";
 		return;
 	}
 
-	for (size_t i = 0; i < element->getChildren().size(); i++)
+	for (size_t currentChild = 0; currentChild < element->getChildren().size(); currentChild++) // Cycles through all children
 	{
-		std::cout << element->getChildren()[i]->getKey() << ':' << element->getChildren()[i]->getID();
-		for (size_t j = 0; j < element->getChildren()[i]->getAttributes().size(); j++)
+		std::cout << element->getChildren()[currentChild]->getKey() << ':' << element->getChildren()[currentChild]->getID(); // Prints child key and id
+		for (size_t currentAttribute = 0; currentAttribute < element->getChildren()[currentChild]->getAttributes().size(); currentAttribute++) // Prints all other attributes of child
 		{
-			std::cout << ", " << element->getChildren()[i]->getAttributes()[j].getKey();
+			std::cout << ", " << element->getChildren()[currentChild]->getAttributes()[currentAttribute].getKey();
 		}
 		std::cout << '\n';
 	}
@@ -408,14 +413,15 @@ void xmlFile::children(std::string& id) // Prints all attributes belonging to ch
 
 void xmlFile::child(std::string& id, size_t n)  // Prints nth child of element identified by id
 {
-	xmlElement* element = findByID(id);
-	if (element == nullptr)
+	xmlElement* element = findByID(id); // Finds element by id
+
+	if (element == nullptr) // If no such element exists
 	{
 		std::cout << "ID not found\n";
 		return;
 	}
 
-	if (n < 1 || n > element->getChildren().size())
+	if (n < 1 || n > element->getChildren().size()) // If n is out of range
 	{
 		std::cout << "ID has no such child\n";
 		return;
@@ -426,8 +432,9 @@ void xmlFile::child(std::string& id, size_t n)  // Prints nth child of element i
 
 void xmlFile::text(std::string& id) // Prints text content of element identified by id
 {
-	xmlElement* element = findByID(id);
-	if (element == nullptr)
+	xmlElement* element = findByID(id); // Finds element by id
+
+	if (element == nullptr) // If no such element exists
 	{
 		std::cout << "ID not found\n";
 		return;
@@ -445,27 +452,28 @@ void xmlFile::text(std::string& id) // Prints text content of element identified
 
 void xmlFile::deleteattribute(std::string& id, std::string& key) // Removes attribute by given element id and attribute key
 {
-	xmlElement* element = findByID(id);
-	if (element == nullptr)
+	xmlElement* element = findByID(id); // Finds element by id
+
+	if (element == nullptr) // If no such element exists
 	{
 		std::cout << "ID not found\n";
 		return;
 	}
-
-	if (key == "id")
+	if (key == "id") // If chosen attribute is id
 	{
 		std::cout << "Cannot remove ID\n";
 		return;
 	}
 
-	Attribute* attribute = element->findByKey(key);
-	if (attribute == nullptr)
+	Attribute* attribute = element->findByKey(key); // Finds attribute by key
+
+	if (attribute == nullptr) // If no such attribute exists
 	{
 		std::cout << "Attribute key not found\n";
 		return;
 	}
 
-	if (attribute != &element->useAttributes().back())
+	if (attribute != &element->useAttributes().back()) // Swaps attribute with last in vector in order to remove using pop_back()
 	{
 		std::swap(*attribute, element->useAttributes().back());
 	}
@@ -476,21 +484,22 @@ void xmlFile::deleteattribute(std::string& id, std::string& key) // Removes attr
 
 void xmlFile::newattribute(std::string& id, std::string& key, std::string& value) // Creates new attribute by given element id and attribute key
 {
-	xmlElement* element = findByID(id);
-	if (element == nullptr)
+	xmlElement* element = findByID(id); // Finds element by id
+
+	if (element == nullptr) // If no such element exists
 	{
 		std::cout << "ID not found\n";
 		return;
 	}
-
-	if (key == "id")
+	if (key == "id") // If chosen attribute is id
 	{
 		std::cout << "Attribute already exists, try:\nset <id> <key> <value>\n";
 		return;
 	}
 
-	Attribute* attribute = element->findByKey(key);
-	if (attribute != nullptr)
+	Attribute* attribute = element->findByKey(key); // Finds attribute by key
+
+	if (attribute != nullptr) // If no such attribute exists
 	{
 		std::cout << "Attribute already exists, try:\nset <id> <key> <value>\n";
 		return;
@@ -507,63 +516,71 @@ void xmlFile::newattribute(std::string& id, std::string& key, std::string& value
 
 void xmlFile::newchild(std::string& id) // Creates new child of element identified by id
 {
-	std::list<xmlElement>::iterator parentPosition = findPositionByID(id);
-	if (parentPosition == Elements.end())
+	std::list<xmlElement>::iterator parentPosition = findPositionByID(id); // Finds element position by id
+
+	if (parentPosition == Elements.end()) // If no such element exists
 	{
 		std::cout << "ID not found\n";
 		return;
 	}
 
 	std::list<xmlElement>::iterator childPosition = ++parentPosition;
-	--parentPosition;
+	--parentPosition; // Returns iterator to parent position
 
-	for (size_t i = 0; i < parentPosition->getChildren().size(); i++) // SET LIST POSITION AFTER LAST CHILD
+	for (size_t i = 0; i < parentPosition->getChildren().size(); i++) // Sets position in list after last child
 	{
 		++childPosition;
 	}
 
 	insertElement(childPosition, "child");
-	--childPosition;
+	--childPosition; // Returns iterator to newly added child
 
 	parentPosition->addChild(*(childPosition));
 
 	std::cout << "Successfully added child\n";
 }
 
-void recursion(std::vector<XPathNode>& nodes, size_t currentNodeIndex, xmlElement* currentNode)
+void traverseXPath(std::vector<XPathNode>& nodes, size_t currentNodeIndex, xmlElement* currentElementNode) // Recursive function to execute XPath expression
 {
-	if (!nodes.empty() && nodes[currentNodeIndex].getElement() == currentNode->getKey() 
-		&& currentNode->meetsCondition(nodes[currentNodeIndex].getCondition()))
+	if (!nodes.empty() && nodes[currentNodeIndex].getElement() == currentElementNode->getKey() // If there are nodes and the current nodename matches the current element key
+		&& currentElementNode->fulfilsPredicate(nodes[currentNodeIndex].getPredicate())) // and checks if element fulfils predicate, if any
 	{
 		currentNodeIndex++;
 		if (currentNodeIndex < nodes.size())
 		{
-			for (size_t currChild = 0; currChild < currentNode->getChildren().size(); currChild++)
+			for (size_t currentChild = 0; currentChild < currentElementNode->getChildren().size(); currentChild++) // Cycles through all children
 			{
-				if (currentNodeIndex == (nodes.size() - 1) && currentNode->getChildren()[currChild]->getKey() == nodes[nodes.size() - 1].getElement())
+				if (currentNodeIndex == (nodes.size() - 1) && currentElementNode->getChildren()[currentChild]->getKey() == nodes[nodes.size() - 1].getElement()) // If last node and if nodename matches element key
 				{
-					if (currentNode->getChildren()[currChild]->getType() == "text")
+					if (currentElementNode->getChildren()[currentChild]->getType() == "text")
 					{
-						std::cout << currentNode->getChildren()[currChild]->getContent() << '\n';
+						std::cout << currentElementNode->getChildren()[currentChild]->getContent() << '\n';
+						return;
 					}
 					else
 					{
-						std::cout << *currentNode->getChildren()[currChild];
+						std::cout << *currentElementNode->getChildren()[currentChild];
 					}
-					return;
 				}
 
-				recursion(nodes, currentNodeIndex, currentNode->getChildren()[currChild]);
+				traverseXPath(nodes, currentNodeIndex, currentElementNode->getChildren()[currentChild]); // Recursive calling
 			}
 		}
 	}
 }
 
-void xmlFile::xpath(/*std::string& id, */std::string& xpath) // Recognises few basic XPath2.0 expressions, expects mostly ideal input
-// Currently supports '/', creating an absolute path to an element, last node must be a text element
+void xmlFile::xpath(std::string& xpath) // Recognises few basic XPath2.0 expressions, expects mostly ideal input, can handle some falsely formatted input as correct
+/*
+Currently supports: 
+	/ - creating an absolute path to an element
+	[] - various predicates:
+	parent/nodename[(positive integer n)] - selects the nth child with name "nodename" of parent
+	nodename[(textChild=textContent)] - selects the elements with name "nodename" that have a child named "textChild" with content "textContent"
+	nodename[@attribute] - selects the elements with name "nodename" that have an attribute with key "attribute"
+*/
 {
 	// I have chosen to make my code work as "proper" XPath support, even though it is at odds with the given task and its examples
-	// And the given examples for this task are incorrect
+	// The given examples for this task are incorrect XPath expressions
 	// It says "person/address[0]" should give the first person's address
 	// In reality that should be "/people/person[1]/address"
 	// The given example would actually select nothing, because counting starts from 1
@@ -572,5 +589,5 @@ void xmlFile::xpath(/*std::string& id, */std::string& xpath) // Recognises few b
 
 	std::vector<XPathNode> nodes = parseXPath(xpath);
 
-	recursion(nodes, 0, root);
+	traverseXPath(nodes, 0, root);
 }

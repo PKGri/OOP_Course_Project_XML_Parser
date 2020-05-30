@@ -1,9 +1,8 @@
-#include "Commands.h"
-#include "XML_File.h"
-
 #include <iostream>
 #include <sstream>
-#include <regex>
+
+#include "Commands.h"
+#include "XML_File.h"
 
 std::string command;
 xmlFile file;
@@ -12,7 +11,7 @@ xmlFile file;
 //**********************************************************************************************************\\
 |-----------------------------------------> COMMAND FUNCTIONS <----------------------------------------------|
 
-void open()
+void open() // Opens file
 {
 	file.open();
 
@@ -23,19 +22,19 @@ void open()
 	std::cout << "Closed\n";
 }
 
-void save()
+void save() // Saves file to original path
 {
 	file.save();
 	std::cout << "Succesfully saved " << file.getPath() << '\n';
 }
 
-void saveas()
+void saveas() // Saves file to specified path
 {
 	file.saveas();
 	std::cout << "Succesfully saved as " << file.getPath() << '\n';
 }
 
-void help()
+void help() // Prints supported functionalities
 {
 	std::cout << "\nThe following commands are supported:\n\n"
 				"open <file>\n"
@@ -52,6 +51,8 @@ void help()
 				" -prints attribute value by given element id and key\n"
 				"set <id> <key> <value>\n"
 				" -sets attribute value by given element id and key\n"
+				"settext <id> <text>"
+				" -sets text content of element by given element id"
 				"children <id>\n"
 				" -prints a list of id's children's attributes\n"
 				"child <id> <n>\n"
@@ -72,13 +73,12 @@ void help()
 				" -exits the program\n";
 }
 
-
-void print() 
+void print() // Prints loaded file data 
 {
 	file.print();
 }
 
-void select() 
+void select() // Prints attribute value by given element id and attribute key
 {
 	std::string id, key;
 	std::cin >> id >> key;
@@ -86,7 +86,7 @@ void select()
 	file.select(id, key);
 }
 
-void set() 
+void set() // Sets attribute value by given element id and attribute key
 {
 	std::string id, key, value;
 	std::cin >> id >> key >> value;
@@ -94,7 +94,7 @@ void set()
 	file.set(id, key, value);
 }
 
-void settext()
+void settext() // Sets text content of element by given element id
 {
 	std::string id, text;
 	std::cin >> id ;
@@ -104,7 +104,7 @@ void settext()
 	file.settext(id, text);
 }
 
-void children() 
+void children() // Prints all attributes belonging to children of element identified by id
 {
 	std::string id;
 	std::cin >> id;
@@ -112,7 +112,7 @@ void children()
 	file.children(id);
 }
 
-void child() 
+void child() // Prints nth child of element identified by id
 {
 	std::string id;
 	size_t n;
@@ -122,7 +122,7 @@ void child()
 	file.child(id, n);
 }
 
-void text() 
+void text() // Prints text content of element identified by id
 {
 	std::string id;
 	std::cin >> id;
@@ -130,7 +130,7 @@ void text()
 	file.text(id);
 }
 
-void deleteattribute() 
+void deleteattribute() // Removes attribute by given element id and attribute key
 {
 	std::string id, key;
 	std::cin >> id >> key;
@@ -138,7 +138,7 @@ void deleteattribute()
 	file.deleteattribute(id, key);
 }
 
-void newattribute() 
+void newattribute() // Creates new attribute by given element id and attribute key
 {
 	std::string id, key, value;
 	std::cin >> id >> key >> value;
@@ -146,7 +146,7 @@ void newattribute()
 	file.newattribute(id, key, value);
 }
 
-void newchild() 
+void newchild() // Creates new child of element identified by id
 {
 	std::string id;
 	std::cin >> id;
@@ -154,7 +154,7 @@ void newchild()
 	file.newchild(id);
 }
 
-void xpath() 
+void xpath() // Recognises few basic XPath2.0 expressions, expects mostly ideal input, can handle some falsely formatted input as correct
 {
 	std::string xpath;
 	getline(std::cin, xpath);

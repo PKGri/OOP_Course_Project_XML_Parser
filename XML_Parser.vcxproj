@@ -138,6 +138,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Attribute.cpp" />
     <ClCompile Include="Commands.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="XML_Element.cpp" />
@@ -145,6 +146,7 @@
     <ClCompile Include="XPath_Node.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Attribute.h" />
     <ClInclude Include="Commands.h" />
     <ClInclude Include="XML_Element.h" />
     <ClInclude Include="XML_File.h" />
