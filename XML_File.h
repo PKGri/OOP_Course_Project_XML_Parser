@@ -21,7 +21,6 @@ private:
 	std::string xmlVersion;
 	xmlElement* root;
 	std::list<xmlElement> Elements;
-	std::vector<size_t> openedTags; // Used as a stack
 
 	xmlElement& listNth(const size_t n);
 

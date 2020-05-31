@@ -107,7 +107,7 @@ std::vector<XPathNode> parseXPath(const std::string& xpath) // Creates vector of
 //**********************************************************************************************************\\
 |-------------------------------------------> XMLFILE CLASS <------------------------------------------------|
 
-xmlFile::xmlFile() : path(), xmlVersion("<?xml version=\"1.0\"?>"), root(nullptr), Elements(), openedTags() {}
+xmlFile::xmlFile() : path(), xmlVersion("<?xml version=\"1.0\"?>"), root(nullptr), Elements() {}
 
 xmlElement& xmlFile::listNth(const size_t n) // Returns Nth element in Elements
 {
@@ -140,6 +140,7 @@ void xmlFile::uniquifyID() // Name says it all, makes all XML element IDs in fil
 				*matches[currentMatch] += ("_" + std::to_string(currentMatch + 1));
 			}
 		}
+		matches.clear();
 	}
 }
 
@@ -192,6 +193,8 @@ void xmlFile::open() // Loads data from file
 {
 	std::cin >> path; // File path
 
+	std::vector<size_t> openedTags; // Used as a stack
+
 	if (isXmlFile(path))
 	{
 		std::ifstream xml_file(path.data());
@@ -235,7 +238,7 @@ void xmlFile::open() // Loads data from file
 
 		if (isEmptyTag(currentInput)) return; // If root is empty tag
 
-		openedTags.push_back(Elements.size() - 1); // Saves last opened tag at end of vector
+		openedTags.push_back(Elements.size() - 1); // Saves last opened element's position in Elements at end of vector
 
 		while (!xml_file.eof() && !openedTags.empty()) // Reads until end of file or until root tag is closed
 		{
@@ -303,7 +306,6 @@ void xmlFile::clear() // Resets loaded information
 	xmlElement::resetAutoID();
 	root = nullptr;
 	Elements.clear();
-	openedTags.clear();
 }
 
 
@@ -552,12 +554,13 @@ void traverseXPath(std::vector<XPathNode>& nodes, size_t currentNodeIndex, xmlEl
 			{
 				if (currentNodeIndex == (nodes.size() - 1) && currentElementNode->getChildren()[currentChild]->getKey() == nodes[nodes.size() - 1].getElement()) // If last node and if nodename matches element key
 				{
-					if (currentElementNode->getChildren()[currentChild]->getType() == "text")
+					if (currentElementNode->getChildren()[currentChild]->getType() == "text" 
+						&& currentElementNode->fulfilsPredicate(nodes[currentNodeIndex].getPredicate()))
 					{
 						std::cout << currentElementNode->getChildren()[currentChild]->getContent() << '\n';
-						return;
 					}
-					else
+					else if (currentElementNode->getChildren()[currentChild]->getType() != "text" 
+						&& currentElementNode->fulfilsPredicate(nodes[currentNodeIndex].getPredicate()))
 					{
 						std::cout << *currentElementNode->getChildren()[currentChild];
 					}
