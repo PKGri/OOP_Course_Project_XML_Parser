@@ -55,7 +55,7 @@ void XPathNode::setElement(std::string& _element)
 	element = _element;
 }
 
-void XPathNode::setCondition(std::string& _predicate)
+void XPathNode::setPredicate(std::string& _predicate)
 {
 	predicate = _predicate;
 }

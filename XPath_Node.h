@@ -15,7 +15,7 @@ public:
 	const std::string& getPredicate() const;
 
 	void setElement(std::string&);
-	void setCondition(std::string&);
+	void setPredicate(std::string&);
 
 	void parseNode(std::string&);
 };
