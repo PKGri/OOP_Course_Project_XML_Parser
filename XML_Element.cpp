@@ -184,7 +184,7 @@ void xmlElement::addChild(xmlElement& child) // Adds child
 	children.push_back(&child);
 }
 
-bool isDigits(const std::string& str) // Checks if string is only digits
+bool isDigits(const std::string& str) // Checks if string is only digits | Function is taken from here: https://stackoverflow.com/questions/8888748/how-to-check-if-given-c-string-or-char-contains-only-digits
 {
 	return str.find_first_not_of("0123456789") == std::string::npos;
 }
