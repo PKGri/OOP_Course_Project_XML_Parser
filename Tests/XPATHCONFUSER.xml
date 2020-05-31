@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<root id="root" at1="attribute1">
+    <parent id="child1">
+        <text id="child1"> Text1 </text>
+    </parent>
+    <text id= " child1" >Text2</text>
+    <empty id="child1"/>
+    <child/>
+    <child/>
+    <child>
+        <child>
+            <child>Text1</child>
+        </child>
+        <child>
+            <child id="18">Text2</child>
+        </child>
+        <child/>
+    </child>
+    <child/>
+    <child/>
+    <child/>
+    <child/>
+</root>

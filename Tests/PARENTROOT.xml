@@ -1,0 +1,7 @@
+<root id="root">
+   <parent id="child1">
+      <text id="child1_1">Text1</text>
+   </parent>
+   <text id="child2">Text2</text>
+   <empty id="child3"/>
+</root>
